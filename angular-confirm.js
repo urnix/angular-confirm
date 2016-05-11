@@ -1,7 +1,7 @@
 /*
  * angular-confirm
  * https://github.com/Schlogen/angular-confirm
- * @version v1.2.4 - 2016-05-11
+ * @version v1.2.5 - 2016-05-12
  * @license Apache
  */
 (function (root, factory) {
@@ -15,21 +15,7 @@
   }
 }(this, function (angular) {
 angular.module('angular-confirm', ['ui.bootstrap.modal'])
-  .controller('ConfirmModalController', function ($scope, $uibModalInstance, data) {
-    $scope.data = angular.copy(data);
-
-    $scope.ok = function (closeMessage) {
-      $uibModalInstance.close(closeMessage);
-    };
-
-    $scope.cancel = function (dismissMessage) {
-      if (angular.isUndefined(dismissMessage)) {
-        dismissMessage = 'cancel';
-      }
-      $uibModalInstance.dismiss(dismissMessage);
-    };
-
-  })
+  .controller('ConfirmModalController', confirmController)
   .value('$confirmModalDefaults', {
     template: '<div class="modal-header"><h3 class="modal-title">{{data.title}}</h3></div>' +
     '<div class="modal-body">{{data.text}}</div>' +
@@ -44,11 +30,32 @@ angular.module('angular-confirm', ['ui.bootstrap.modal'])
       cancel: 'Cancel'
     }
   })
-  .factory('$confirm', function ($uibModal, $confirmModalDefaults) {
+  .factory('$confirm', confirmFactory)
+  .directive('confirm', confirmDirective);
+
+  confirmController.$inject = ['$scope', '$uibModalInstance', 'data'];
+  function confirmController ($scope, $uibModalInstance, data) {
+    $scope.data = angular.copy(data);
+
+    $scope.ok = function (closeMessage) {
+      $uibModalInstance.close(closeMessage);
+    };
+
+    $scope.cancel = function (dismissMessage) {
+      if (angular.isUndefined(dismissMessage)) {
+        dismissMessage = 'cancel';
+      }
+      $uibModalInstance.dismiss(dismissMessage);
+    };
+
+  }
+
+  confirmFactory.$inject = ['$uibModal', '$confirmModalDefaults'];
+  function confirmFactory ($uibModal, $confirmModalDefaults) {
     return function (data, settings) {
       var defaults = angular.copy($confirmModalDefaults);
       settings = angular.extend(defaults, (settings || {}));
-      
+
       data = angular.extend({}, settings.defaultLabels, data || {});
 
       if ('templateUrl' in settings && 'template' in settings) {
@@ -63,8 +70,10 @@ angular.module('angular-confirm', ['ui.bootstrap.modal'])
 
       return $uibModal.open(settings).result;
     };
-  })
-  .directive('confirm', function ($confirm, $timeout) {
+  }
+
+  confirmDirective.$inject = ['$confirm', '$timeout'];
+  function confirmDirective ($confirm, $timeout) {
     return {
       priority: 1,
       restrict: 'A',
@@ -121,5 +130,5 @@ angular.module('angular-confirm', ['ui.bootstrap.modal'])
 
       }
     }
-  });
+  }
 }));
